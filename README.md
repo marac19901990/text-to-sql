@@ -49,7 +49,7 @@ text-to-sql/
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/marac19901990/text-to-sql.git
    cd text-to-sql
    ```
 
