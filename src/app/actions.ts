@@ -17,7 +17,6 @@ export async function message(messages: StoredMessage[]) {
     const getFromDB = tool(
         async (input) => {
             if (input?.sql) {
-                console.log({ sql: input.sql });
 
                 const result = await execute(input.sql);
 

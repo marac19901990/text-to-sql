@@ -10,27 +10,33 @@ const db = new sqlite3.Database(dbPath);
 
 
 export async function seed() {
-    db.serialize(() => {
-        db.run(customerTable)
-        db.run(orderTable)
-    })
+    return new Promise((resolve, reject) => {
+        db.serialize(() => {
+            db.run(customerTable, (err) => {
+                if (err) console.error('Error creating customer table:', err);
+            });
 
-    db.run(`
-REPLACE INTO 'customer' ('id', 'email', 'name')  
-VALUES  
-    (1, 'lucas.bill@example.com', 'Lucas Bill'),  
-    (2, 'mandy.jones@example.com', 'Mandy Jones'),  
-    (3, 'salim.ali@example.com', 'Salim Ali'),  
-    (4, 'jane.xiu@example.com', 'Jane Xiu'),  
-    (5, 'john.doe@example.com', 'John Doe'),  
-    (6, 'jane.smith@example.com', 'Jane Smith'),  
-    (7, 'sandeep.bhushan@example.com', 'Sandeep Bhushan'),  
-    (8, 'george.han@example.com', 'George Han'),  
-    (9, 'asha.kumari@example.com', 'Asha Kumari'),  
-    (10, 'salma.khan@example.com', 'Salma Khan');
-    `);
+            db.run(orderTable, (err) => {
+                if (err) console.error('Error creating order table:', err);
+            });
 
-    db.run(`
+            db.run(`
+REPLACE INTO 'customer' ('id', 'email', 'name')
+VALUES
+    (1, 'lucas.bill@example.com', 'Lucas Bill'),
+    (2, 'mandy.jones@example.com', 'Mandy Jones'),
+    (3, 'salim.ali@example.com', 'Salim Ali'),
+    (4, 'jane.xiu@example.com', 'Jane Xiu'),
+    (5, 'john.doe@example.com', 'John Doe'),
+    (6, 'jane.smith@example.com', 'Jane Smith'),
+    (7, 'sandeep.bhushan@example.com', 'Sandeep Bhushan'),
+    (8, 'george.han@example.com', 'George Han'),
+    (9, 'asha.kumari@example.com', 'Asha Kumari'),
+    (10, 'salma.khan@example.com', 'Salma Khan')`, (err) => {
+                if (err) console.error('Error seeding customers:', err);
+            });
+
+            db.run(`
 REPLACE INTO 'order' ('id', 'createdate', 'shippingcost', 'customerid', 'carrier', 'trackingid')
 VALUES
     (1, '2024-08-05', 3, 4, '', ''),
@@ -52,8 +58,16 @@ VALUES
     (17, '2024-08-03', 1, 7, '', ''),
     (18, '2024-08-06', 1, 6, '', ''),
     (19, '2024-08-04', 2, 1, '', ''),
-    (20, '2024-08-01', 1, 1, '', '');    
-    `);
+    (20, '2024-08-01', 1, 1, '', '')`, (err) => {
+                if (err) {
+                    console.error('Error seeding orders:', err);
+                    reject(err);
+                } else {
+                    resolve(true);
+                }
+            });
+        });
+    });
 }
 
 export async function execute(sql: string) {

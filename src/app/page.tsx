@@ -28,8 +28,6 @@ export default function Home() {
     const response = await message(mapChatMessagesToStoredMessages(messageHistory))
 
     if (response) {
-      console.log({ response })
-      // Response is now the content string directly
       messageHistory.push(new AIMessage(response as string))
     }
 
