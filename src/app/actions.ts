@@ -1,26 +1,59 @@
-"use server"
+"use server";
 
 import { ChatAnthropic } from "@langchain/anthropic";
-import { mapStoredMessagesToChatMessages, mapChatMessagesToStoredMessages, StoredMessage } from "@langchain/core/messages";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
+import { tool } from "@langchain/core/tools";
+import { z } from "zod";
+import {
+    mapStoredMessagesToChatMessages,
+    StoredMessage,
+} from "@langchain/core/messages";
+import { execute } from "@/lib/database";
+import { customerTable, orderTable } from "@/lib/constants";
 
 export async function message(messages: StoredMessage[]) {
     const deserialized = mapStoredMessagesToChatMessages(messages);
 
-    const agent = createReactAgent(
+    const getFromDB = tool(
+        async (input) => {
+            if (input?.sql) {
+                console.log({ sql: input.sql });
+
+                const result = await execute(input.sql);
+
+                return JSON.stringify(result);
+            }
+            return null;
+        },
         {
-            llm: new ChatAnthropic({
-                model: "claude-sonnet-4-20250514",
-                apiKey: process.env.ANTHROPIC_API_KEY
+            name: "get_from_db",
+            description: `Get data from a database, the database has the following schema:
+
+      ${orderTable}
+      ${customerTable}
+      `,
+            schema: z.object({
+                sql: z
+                    .string()
+                    .describe(
+                        "SQL query to get data from a SQL database. Always put quotes around the field and table arguments."
+                    ),
             }),
-            tools: []
         }
-    )
+    );
+
+    const agent = createReactAgent({
+        llm: new ChatAnthropic({
+            model: "claude-sonnet-4-20250514",
+            apiKey: process.env.ANTHROPIC_API_KEY,
+            temperature: 0,
+        }),
+        tools: [getFromDB],
+    });
 
     const response = await agent.invoke({
-        messages: deserialized
-    })
+        messages: deserialized,
+    });
 
-    // Serialize messages so they can be passed back to client
-    return mapChatMessagesToStoredMessages(response.messages)
+    return response.messages[response.messages.length - 1].content;
 }

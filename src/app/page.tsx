@@ -9,28 +9,32 @@ export default function Home() {
   const [inputMessage, setInputMessage] = useState<string>("")
   const [messages, setMessages] = useState<BaseMessage[]>([
     new SystemMessage(`
-        You are a text-to-sql agent
-        You should create an SQL query based on input provided in natural language
+      You are an expert SQL assistant. Your task is to generate SQL queries based on user requests. Follow these strict formatting guidelines:
+        
+      You should create a SQLite query based on natural language. 
+      Use the "getFromDB" tool to get data from a database.
+
+      - Always enclose field names and table names in double quotes ("), even if they contain no special characters.
+      - Ensure proper SQL syntax and use best practices for readability.
+      - Maintain consistency in capitalization (e.g., SQL keywords in uppercase).
       `)
   ])
   const [isLoading, setIsLoading] = useState<boolean>(false)
 
   async function sendMessage() {
-    setInputMessage("")
     setIsLoading(true)
     const messageHistory = [...messages, new HumanMessage(inputMessage)]
 
     const response = await message(mapChatMessagesToStoredMessages(messageHistory))
 
-    if (response && response.length > 0) {
-      const lastMessage = response[response.length - 1]
-      if (lastMessage.type === "ai" && lastMessage.data.content) {
-        messageHistory.push(new AIMessage(lastMessage.data.content))
-      }
+    if (response) {
+      console.log({ response })
+      // Response is now the content string directly
+      messageHistory.push(new AIMessage(response as string))
     }
-    console.log(messageHistory)
 
     setMessages(messageHistory)
+    setInputMessage("");
     setIsLoading(false)
   }
 
@@ -99,8 +103,8 @@ export default function Home() {
             onClick={sendMessage}
             className="flex items-center justify-center bg-indigo-500 hover:bg-indigo-600 rounded-xl text-white px-4 py-2 flex-shrink-0"
           >
+            <span>{isLoading ? "Loading..." : "Send"}</span>
           </button>
-          <span>{isLoading ? "Loading..." : "sent"}</span>
         </div>
       </div>
     </div>

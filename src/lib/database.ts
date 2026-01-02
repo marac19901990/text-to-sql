@@ -2,8 +2,11 @@
 
 import sqlite3 from "sqlite3";
 import { customerTable, orderTable } from "@/lib/constants";
+import path from "path";
 
-const db = new sqlite3.Database(':memory:');
+// Use a file-based database so data persists across processes
+const dbPath = path.join(process.cwd(), 'data.db');
+const db = new sqlite3.Database(dbPath);
 
 
 export async function seed() {
