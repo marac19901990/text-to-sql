@@ -1,13 +1,14 @@
 # Text-to-SQL Agent
 
-A Next.js application that converts natural language queries into SQL using Claude AI (Anthropic) and LangChain. The agent maintains conversation history and can query a SQLite database containing customer and order data.
+A Next.js application that converts natural language queries into SQL using Claude AI (Anthropic) and LangChain. The agent uses tool calling to autonomously generate and execute SQL queries against a persistent SQLite database containing customer and order data.
 
 ## Features
 
-- **AI-Powered SQL Generation**: Uses Claude Sonnet 4 to convert natural language to SQL queries
+- **AI-Powered SQL Generation**: Uses Claude Sonnet 4.5 to convert natural language to SQL queries
+- **Tool-Based Agent**: LangGraph ReAct agent with database query tool for autonomous SQL execution
 - **Interactive Chat Interface**: Real-time conversation with the AI agent
-- **SQLite Database**: In-memory database with sample customer and order data
-- **Message History**: Maintains conversation context across queries
+- **Persistent SQLite Database**: File-based database (data.db) with sample customer and order data
+- **Message History**: Maintains full conversation context across queries
 - **TypeScript**: Full type safety throughout the application
 
 ## Tech Stack
