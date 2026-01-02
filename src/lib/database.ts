@@ -1,7 +1,7 @@
 "use server"
 
 import sqlite3 from "sqlite3";
-import { customerTable, orderTable } from "@/constants";
+import { customerTable, orderTable } from "@/lib/constants";
 
 const db = new sqlite3.Database(':memory:');
 

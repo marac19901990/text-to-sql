@@ -1,4 +1,4 @@
-import { seed } from '../src/app/database'
+import { seed } from '../src/lib/database'
 
 async function main() {
   console.log('Starting database seeding...')
