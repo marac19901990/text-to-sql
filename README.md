@@ -73,10 +73,12 @@ text-to-sql/
 
    Get your API key from: https://console.anthropic.com/settings/keys
 
-4. **Seed the database** (optional)
+4. **Seed the database**
    ```bash
    npm run seed
    ```
+
+   This creates `data.db` and populates it with 10 customers and 20 orders.
 
 5. **Run the development server**
    ```bash
@@ -99,8 +101,8 @@ Simply type natural language questions about the data in the chat interface:
 - "Find orders created in August 2024"
 
 The AI agent will:
-1. Convert your question to SQL
-2. Execute the query (when connected to database)
+1. Analyze your natural language question
+2. Use the `get_from_db` tool to generate and execute SQL queries
 3. Return the results in a readable format
 
 ### Database Schema
@@ -153,9 +155,16 @@ Settings are in `.vscode/settings.json`
 ### Modifying the AI Agent
 
 The agent configuration is in `src/app/actions.ts`:
-- Model: Claude Sonnet 4
-- Tools: Currently empty, can add custom tools
+- Model: `claude-sonnet-4-20250514` (Claude Sonnet 4.5)
+- Temperature: 0 (deterministic)
+- Tools: `get_from_db` - executes SQL queries against the database
 - System prompt: Defined in `src/app/page.tsx`
+
+The `get_from_db` tool:
+- Receives SQL query as input
+- Validates schema using Zod
+- Executes query via `execute()` function
+- Returns JSON stringified results
 
 ### Database Queries
 
@@ -176,10 +185,26 @@ Execute SQL queries using the `execute` function from `src/lib/database.ts`
 ```
 User Input → HumanMessage → serialize → Server Action
                                          ↓
-                                    Claude Agent
+                                    Claude Agent (ReAct)
+                                         ↓
+                                    Tool: get_from_db
+                                         ↓
+                                    Execute SQL Query
                                          ↓
 AI Response ← deserialize ← StoredMessage ← Agent Response
 ```
+
+### How the Agent Works
+
+1. **User sends a message**: Natural language question typed in the chat
+2. **Message serialization**: Converted to LangChain's `StoredMessage` format
+3. **Server action invoked**: `message()` function in `actions.ts` receives the message history
+4. **Agent reasoning**: Claude analyzes the question and determines it needs database data
+5. **Tool calling**: Agent calls `get_from_db` tool with generated SQL query
+6. **Query execution**: SQL query runs against the SQLite database
+7. **Tool response**: Results returned to the agent as JSON
+8. **Final response**: Agent formulates natural language response with the data
+9. **UI update**: Response displayed in the chat interface
 
 ## Troubleshooting
 
@@ -195,9 +220,17 @@ AI Response ← deserialize ← StoredMessage ← Agent Response
 
 ### Database Not Seeding
 
+- Ensure `data.db` file was created (check with `ls -lh data.db`)
 - Check that `src/lib/constants.ts` exports table schemas
 - Run `npm run seed` manually
 - Check console for error messages
+- Verify the database has data: `sqlite3 data.db "SELECT COUNT(*) FROM customer;"`
+
+### Database File is Empty (0 bytes)
+
+- The `seed()` function must properly wait for async operations
+- Ensure all `db.run()` calls use callbacks and resolve/reject appropriately
+- Re-run `npm run seed` after fixing async issues
 
 ## License
 
